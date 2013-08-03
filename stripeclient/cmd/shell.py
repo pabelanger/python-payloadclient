@@ -1,8 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright 2012 OpenStack LLC.
 # Copyright (C) 2013 PolyBeacon, Inc.
-# All Rights Reserved.
 #
 # Author: Paul Belanger <paul.belanger@polybeacon.com>
 #
@@ -18,22 +16,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warlock
+import sys
 
-from stripeclient.common import http
-from stripeclient.v1 import queues
-from stripeclient.v1 import schemas
+from cliff import app
+from cliff import commandmanager
+
+from stripeclient.openstack.common import log as logging
+from stripeclient import version
+
+LOG = logging.getLogger(__name__)
 
 
-class Client(object):
+class Shell(app.App):
 
-    def __init__(self, *args, **kwargs):
-        self.http_client = http.HTTPClient(*args, **kwargs)
-        self.schemas = schemas.Controller(self.http_client)
-        self.queues = queues.Controller(
-            self.http_client, self._get_model('queue')
+    def __init__(self):
+        super(Shell, self).__init__(
+            description='Stripe client', version=version.VERSION_INFO,
+            command_manager=commandmanager.CommandManager('stripe.shell'),
         )
 
-    def _get_model(self, name):
-        schema = self.schemas.get(name)
-        return warlock.model_factory(schema.raw())
+
+def main(argv=sys.argv[1:]):
+    return Shell().run(argv)
